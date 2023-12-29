@@ -44,24 +44,9 @@ public class ThirdCameraControl : MonoBehaviour
         m_lock = !m_lock;
     }
 
-    public Vector2 GetDirection()
+    public float GetDirection()
     {
-
-
-        return Vector2.zero;
-    }
-
-    private float ClampAngle(float angle, float min, float max)
-    {
-        do
-        {
-            if (angle < -360)
-                angle += 360;
-            if (angle > 360)
-                angle -= 360;
-        } while (angle < -360 || angle > 360);
-
-        return Mathf.Clamp(angle, min, max);
+        return m_camera.transform.eulerAngles.y;
     }
 
     private void MoveCamera()
@@ -77,8 +62,8 @@ public class ThirdCameraControl : MonoBehaviour
 
         if (m_axis.magnitude != 0)//마우스 움직임이 있을때만
         {
-            m_axis.x = ClampAngle(m_axis.x, -360, 360);
-            m_axis.y = ClampAngle(m_axis.y, 0, 70);
+            m_axis.x = Mathf.Clamp(m_axis.x, -360, 360);
+            m_axis.y = Mathf.Clamp(m_axis.y, 0, 70);
 
             Quaternion newRot = Quaternion.Euler(m_axis.y, m_axis.x, 0);
             m_camera.transform.rotation = Quaternion.Slerp(m_camera.transform.rotation, newRot, m_cameraSmooth * Time.deltaTime);

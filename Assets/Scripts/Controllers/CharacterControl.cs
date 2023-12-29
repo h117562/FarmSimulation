@@ -26,11 +26,11 @@ public class CharacterControl : MonoBehaviour
 
 
 
-    public void UpdateCharacterMove(Vector2 cameraDirection)//캐릭터 이동 업데이트
+    public void UpdateCharacterMove(float cameraAngle)//캐릭터 이동 업데이트
     {
         if (!m_freeze)
         {
-            MoveCharacter(cameraDirection);
+            MoveCharacter(cameraAngle);
             UpdateTrigger();
         }
     }
@@ -41,11 +41,11 @@ public class CharacterControl : MonoBehaviour
         m_freeze = !m_freeze;
     }
 
-    void MoveCharacter(Vector2 cameraDirection)//방향키에 맞춰서 해당 방향으로 이동
+    void MoveCharacter(float cameraAngle)//방향키에 맞춰서 해당 방향으로 이동
     {
         bool keyA, keyD, keyW, keyS;
 
-        m_direction = Vector2.zero;//방향 초기화
+        m_direction = Vector3.zero;//방향 초기화
 
         keyA = Input.GetKey(m_left);
         keyD = Input.GetKey(m_right);
@@ -84,6 +84,8 @@ public class CharacterControl : MonoBehaviour
             m_direction.z = -1;
         }
 
+        m_direction = Quaternion.Euler(new Vector3(0.0f, cameraAngle, 0.0f)) * m_direction;
+
         if (keyA || keyD || keyS || keyW)//이동방향키를 눌렀을 경우
         {
             this.transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(new Vector3(m_direction.x, 0, m_direction.z)), Time.deltaTime * m_rotateSpeed);
@@ -93,6 +95,7 @@ public class CharacterControl : MonoBehaviour
         {
             m_state = PlayerState.Idle;
         }
+
         
         Vector3 targetVelocity = Vector3.Lerp(m_direction, m_direction + this.transform.position, (m_state == PlayerState.Walk ? 0 : m_movementSpeed * Time.deltaTime));
         targetVelocity.y = m_rigidbody.velocity.y;//y축 운동량은 그대로
