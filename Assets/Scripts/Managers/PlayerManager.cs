@@ -11,6 +11,7 @@ public class PlayerManager : MonoBehaviour
     {
         m_CameraControl = gameObject.GetComponent<ThirdCameraControl>();
         m_CameraControl.SetMainCamera();//씬 안의 메인 카메라를 플레이어에게 붙임
+        m_CameraControl.ToggleCameraLock();
         m_CameraControl.CameraFollowTo(gameObject);
 
         m_CharacterControl = gameObject.GetComponent<CharacterControl>();

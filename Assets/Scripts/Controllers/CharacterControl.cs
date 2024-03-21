@@ -14,9 +14,11 @@ public class CharacterControl : MonoBehaviour
     public KeyCode m_right = KeyCode.D;
     public KeyCode m_backward = KeyCode.S;
 
-    Vector3 m_direction = new Vector3(0, 0, 1);//현재 이동방향
-    float m_movementSpeed = 4.0f;//이동속도
-    float m_rotateSpeed = 10.0f;//회전속도
+    [HideInInspector]
+    Vector3 m_direction = Vector3.zero;//이동방향
+    float m_movementSpeed = 2.0f;//이동 속도(곱)
+    float m_speed = 0.0f;//현재 속도
+    float m_rotateSpeed = 10.0f;//캐릭터 회전속도
     PlayerState m_state = PlayerState.Idle;//현재 플레이어 상태
     PlayerState m_before = PlayerState.Idle;//이전 플레이어 상태
     bool m_freeze = false;//방향키 잠금
@@ -44,7 +46,6 @@ public class CharacterControl : MonoBehaviour
     void MoveCharacter(float cameraAngle)//방향키에 맞춰서 해당 방향으로 이동
     {
         bool keyA, keyD, keyW, keyS;
-
         m_direction = Vector3.zero;//방향 초기화
 
         keyA = Input.GetKey(m_left);
@@ -84,11 +85,11 @@ public class CharacterControl : MonoBehaviour
             m_direction.z = -1;
         }
 
+        m_direction = m_direction.normalized;
         m_direction = Quaternion.Euler(new Vector3(0.0f, cameraAngle, 0.0f)) * m_direction;
 
         if (keyA || keyD || keyS || keyW)//이동방향키를 눌렀을 경우
         {
-            this.transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(new Vector3(m_direction.x, 0, m_direction.z)), Time.deltaTime * m_rotateSpeed);
             m_state = PlayerState.Walk;
         }
         else//아무 행동 없을 때
@@ -96,10 +97,22 @@ public class CharacterControl : MonoBehaviour
             m_state = PlayerState.Idle;
         }
 
+        Quaternion look = Quaternion.identity;
+
+        if (m_direction.magnitude != 0)
+        {
+            look = Quaternion.LookRotation(new Vector3(m_direction.x, 0, m_direction.z));
+        }else
+        {
+            m_direction = transform.forward;
+        }
         
-        Vector3 targetVelocity = Vector3.Lerp(m_direction, m_direction + this.transform.position, (m_state == PlayerState.Walk ? 0 : m_movementSpeed * Time.deltaTime));
-        targetVelocity.y = m_rigidbody.velocity.y;//y축 운동량은 그대로
-        m_rigidbody.velocity = targetVelocity;
+        m_speed = Mathf.Lerp(m_speed, (m_state != PlayerState.Walk ? 0.0f : 1.0f), 10 * Time.deltaTime);
+        this.transform.rotation = Quaternion.Lerp(transform.rotation, look, (m_state != PlayerState.Walk ? 0 : m_rotateSpeed * Time.deltaTime));
+        m_direction *= m_speed;
+        m_direction.y = m_rigidbody.velocity.y;//y축 운동량은 그대로
+        
+        m_rigidbody.velocity = m_direction * m_movementSpeed;
     }
 
     //애니메이션의 트리거를 처리하는 함수
@@ -117,9 +130,10 @@ public class CharacterControl : MonoBehaviour
                     break;
             }
         }
-
+       
         m_before = m_state;//이전 상태 업데이트
     }
+
 
     public enum PlayerState
     {
